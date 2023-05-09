@@ -1,26 +1,40 @@
-from django.shortcuts import render
-
 from django.shortcuts import render, redirect
 from .models import Post, Comment
 
-def bulletinBoard(request):
-    if request.method == 'POST':
-        # Handle form submission to create a new post
-        post_title = request.POST.get('title')
-        post_content = request.POST.get('content')
-        post_author = request.POST.get('author')
-        post_lect_name = request.POST.get('lectName')
-        post = Post.objects.create(
-            title=post_title,
-            content=post_content,
-            author=post_author,
-            lectName=post_lect_name
-        )
-        return redirect('bulletinBoard')
+def Bulletinboard(request): #게시판 렌더링 함수
+    if request.method == 'POST':   #POST 요청인지 확인, POST 요청이면 새로운 게시물 생성
+        postTitle = request.POST.get('title')
+        postContent = request.POST.get('content')
+        postAuthor = request.POST.get('author')
+        postLectName = request.POST.get('lectName') #전달된 데이터 변수에 할당
+        postIt = Post.objects.create(
+            title=postTitle,
+            content=postContent,
+            author=postAuthor,
+            lectName=postLectName
+        ) # 새 postIt 개체를 생성하여 데이터 할당
+        return redirect('BulletinBoard') # 사용자를 게시판 페이지로 리디렉션
+    
+    
+    if request.method == 'GET' and 'COMMENT' in request.GET:
+        # 메서드가 GET이고, 매개변수에 COMMENT가 있는 경우 새로운 댓글 생성
+        commentContent = request.GET.get('COMMENT')
+        commentAuthor = request.GET.get('commentAuthor')
+        postID = request.GET.get('postID')
+        # 전달된 데이터 변수에 할당
 
-    posts = Post.objects.all()
+        if commentContent and commentAuthor and postID:
+        # commentContent, commentAuthor, postID가 모두 존재할경우
+            post = Post.objects.get(pk=postID) # 해당 postID에 해당하는 Post 객체를 가져옴
+            comment = Comment.objects.create(
+                content=commentContent,
+                author=commentAuthor
+            ) # 새 comment 객체 생성하여 데이터를 할당
+            post.comments.add(comment) # post 객체의 comments 필드에 새로운 comment 추가
+     
 
-    context = {'posts': posts}
-    return render(request, 'Board.html', {
-        'posts' : posts
-    })
+    posts = Post.objects.all()  # 모든 게시물을 가져와 posts 변수에 저장
+    context = {'posts': posts}  # post 변수를 context 딕셔너리에 저장
+    return render(request, 'Board.html', context) # request와 Board.html 템플릿 렌더링
+
+
